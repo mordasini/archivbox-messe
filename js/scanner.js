@@ -213,6 +213,20 @@ const Scanner = {
     if (!result) return;
     const dept = DEPARTMENTS[box.department];
 
+    // Visual feedback - flash the scanner frame green
+    const frame = document.querySelector('.scanner-frame');
+    if (frame) {
+      frame.style.borderColor = '#00C853';
+      frame.style.boxShadow = '0 0 20px rgba(0, 200, 83, 0.5)';
+      setTimeout(() => {
+        frame.style.borderColor = '';
+        frame.style.boxShadow = '';
+      }, 500);
+    }
+
+    // Stop camera after successful scan
+    this.stop();
+
     result.innerHTML = `
       <div class="scanner-found" onclick="App.showBoxDetail('${box.id}')">
         <div class="scanner-found-header">
@@ -226,6 +240,7 @@ const Scanner = {
         </div>
         <div class="scanner-found-cta">Details anzeigen →</div>
       </div>
+      <button class="scanner-rescan-btn" onclick="Scanner.init()">Neuer Scan</button>
     `;
   },
 
