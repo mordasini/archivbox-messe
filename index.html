@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="ArchivBox">
+  <title>ArchivBox Manager – DocuSave</title>
+  <link rel="stylesheet" href="css/app.css?v=2">
+</head>
+<body>
+
+  <!-- ======== HEADER ======== -->
+  <header class="header">
+    <div class="header-brand">
+      <div class="header-logo">DS</div>
+      <div class="header-text">
+        <div class="header-title">ArchivBox Manager</div>
+        <div class="header-subtitle">Gemeinde Musterlingen</div>
+      </div>
+    </div>
+    <div class="messe-badge">
+      <span class="messe-dot"></span>
+      MESSE LIVE
+    </div>
+  </header>
+
+  <!-- ======== VIEWS ======== -->
+
+  <!-- Scan Tab -->
+  <div id="view-scan" class="view">
+    <div id="scanner-area"></div>
+  </div>
+
+  <!-- Search Tab -->
+  <div id="view-search" class="view">
+    <div id="search-area"></div>
+  </div>
+
+  <!-- 3D View Tab -->
+  <div id="view-view3d" class="view">
+    <div class="view3d-toolbar">
+      <button class="v3d-btn active" onclick="View3D.resetCamera(); this.classList.add('active'); this.nextElementSibling.classList.remove('active')">Übersicht</button>
+      <button class="v3d-btn" onclick="View3D.flyToGang(); this.classList.add('active'); this.previousElementSibling.classList.remove('active')">Gang</button>
+      <span class="v3d-status" id="v3d-status"></span>
+    </div>
+    <div id="3d-viewport">
+      <div id="3d-loading">3D-Ansicht wird geladen...</div>
+      <div id="3d-info-panel"></div>
+    </div>
+    <div class="view3d-legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#00A99D"></div> Finanzen</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#E8913A"></div> Personal</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#5B6ABF"></div> Bauamt</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#C94040"></div> Gemeinderat</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#4A9B4A"></div> Einwohnerd.</div>
+    </div>
+  </div>
+
+  <!-- List Tab -->
+  <div id="view-list" class="view">
+    <div id="list-area"></div>
+  </div>
+
+  <!-- Box Detail (overlay) -->
+  <div id="view-detail" class="view">
+    <div id="detail-content"></div>
+  </div>
+
+  <!-- ======== TAB BAR ======== -->
+  <nav id="tab-bar" class="tab-bar"></nav>
+
+  <!-- ======== SCRIPTS ======== -->
+  <!-- QR decoder -->
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+  <!-- Three.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <!-- GSAP -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+  <!-- App modules -->
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/scanner.js"></script>
+  <script src="js/search.js"></script>
+  <script src="js/view3d.js"></script>
+  <script src="js/list.js"></script>
+
+  <!-- Init -->
+  <script>
+    // Check if libraries loaded
+    window.addEventListener('load', () => {
+      const status = document.getElementById('v3d-status');
+      const loading = document.getElementById('3d-loading');
+      
+      if (typeof THREE === 'undefined') {
+        if (status) status.textContent = '⚠️ Three.js nicht geladen';
+        if (loading) loading.innerHTML = '❌ Three.js konnte nicht geladen werden.<br>Bitte Internetverbindung prüfen.';
+        console.error('Three.js not loaded');
+      }
+      if (typeof gsap === 'undefined') {
+        console.warn('GSAP not loaded - animations disabled');
+      }
+      if (typeof jsQR === 'undefined') {
+        console.warn('jsQR not loaded - using native BarcodeDetector only');
+      }
+      
+      App.init();
+    });
+
+    // Handle resize for 3D view
+    window.addEventListener('resize', () => {
+      if (typeof View3D !== 'undefined' && View3D.initialized) {
+        View3D.onResize();
+      }
+    });
+  </script>
+
+</body>
+</html>
