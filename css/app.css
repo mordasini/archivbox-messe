@@ -315,6 +315,23 @@ body {
   color: var(--ds-teal-dark);
 }
 
+.scanner-rescan-btn {
+  display: block;
+  width: 100%;
+  margin-top: 12px;
+  padding: 12px 16px;
+  background: var(--ds-gray-100);
+  border: 1px solid var(--ds-gray-300);
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ds-gray-700);
+  cursor: pointer;
+}
+.scanner-rescan-btn:active {
+  background: var(--ds-gray-200);
+}
+
 .scanner-not-found {
   background: #FEF2F2;
   border: 1px solid #FECACA;
@@ -569,10 +586,22 @@ mark {
 #3d-viewport {
   width: 100%;
   height: calc(100vh - var(--header-h) - var(--tabbar-h) - 44px - 44px);
-  min-height: 300px;
+  min-height: 250px;
   overflow: hidden;
   background: #E8EAED;
   position: relative;
+}
+
+/* Mobile: less padding, more viewport space */
+@media (max-width: 768px) {
+  #3d-viewport {
+    height: calc(100vh - var(--header-h) - var(--tabbar-h) - 36px - 36px);
+    min-height: 200px;
+  }
+  .view3d-toolbar, .view3d-legend {
+    height: 36px !important;
+    padding: 6px 8px !important;
+  }
 }
 
 #3d-viewport canvas {
