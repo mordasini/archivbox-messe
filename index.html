@@ -4,118 +4,264 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="ArchivBox">
-  <title>ArchivBox Manager – DocuSave</title>
-  <link rel="stylesheet" href="css/app.css?v=2">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>ArchivBox Manager</title>
+  <link rel="stylesheet" href="css/app.css">
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.4/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
 </head>
 <body>
-
-  <!-- ======== HEADER ======== -->
-  <header class="header">
-    <div class="header-brand">
-      <div class="header-logo">DS</div>
-      <div class="header-text">
-        <div class="header-title">ArchivBox Manager</div>
-        <div class="header-subtitle">Gemeinde Musterlingen</div>
+  <div id="app">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-left">
+        <svg class="header-logo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/>
+          <path d="m3.3 7 8.7 5 8.7-5"/>
+          <path d="M12 22V12"/>
+        </svg>
+        <span class="header-title">ArchivBox</span>
       </div>
-    </div>
-    <div class="messe-badge">
-      <span class="messe-dot"></span>
-      MESSE LIVE
-    </div>
-  </header>
+      <div class="header-right">
+        <button class="header-btn" id="btn-notifications" aria-label="Benachrichtigungen">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/>
+            <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>
+          </svg>
+          <span class="notification-badge" id="notification-count">3</span>
+        </button>
+        <button class="header-btn" id="btn-user" aria-label="Benutzer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="8" r="5"/>
+            <path d="M20 21a8 8 0 1 0-16 0"/>
+          </svg>
+        </button>
+      </div>
+    </header>
 
-  <!-- ======== VIEWS ======== -->
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Dashboard Tab -->
+      <section id="tab-dashboard" class="tab-content active">
+        <div class="dashboard">
+          <!-- Stats Row -->
+          <div class="stats-grid">
+            <div class="stat-card primary">
+              <div class="stat-value" id="stat-total">2'847</div>
+              <div class="stat-label">Archivboxen</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" id="stat-requested">12</div>
+              <div class="stat-label">Angefordert</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value warning" id="stat-disposal">23</div>
+              <div class="stat-label">Zur Entsorgung</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value" id="stat-departments">5</div>
+              <div class="stat-label">Abteilungen</div>
+            </div>
+          </div>
 
-  <!-- Scan Tab -->
-  <div id="view-scan" class="view">
-    <div id="scanner-area"></div>
+          <!-- Quick Actions -->
+          <div class="section-header">
+            <h2>Schnellzugriff</h2>
+          </div>
+          <div class="quick-actions">
+            <button class="quick-action" onclick="App.switchTab('scan')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 7V5a2 2 0 0 1 2-2h2"/>
+                <path d="M17 3h2a2 2 0 0 1 2 2v2"/>
+                <path d="M21 17v2a2 2 0 0 1-2 2h-2"/>
+                <path d="M7 21H5a2 2 0 0 1-2-2v-2"/>
+                <rect x="7" y="7" width="10" height="10" rx="1"/>
+              </svg>
+              <span>Scannen</span>
+            </button>
+            <button class="quick-action" onclick="App.switchTab('search')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/>
+                <path d="m21 21-4.3-4.3"/>
+              </svg>
+              <span>Suchen</span>
+            </button>
+            <button class="quick-action" onclick="App.showEmergencyMode()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/>
+                <line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+              <span>Notfall</span>
+            </button>
+            <button class="quick-action" onclick="App.showBulkEdit()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                <path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"/>
+              </svg>
+              <span>Bearbeiten</span>
+            </button>
+          </div>
+
+          <!-- Alerts Section -->
+          <div class="section-header">
+            <h2>Handlungsbedarf</h2>
+            <button class="section-link" onclick="App.showAllAlerts()">Alle anzeigen</button>
+          </div>
+          <div class="alert-list" id="alert-list">
+            <!-- Filled by JS -->
+          </div>
+
+          <!-- Hitlist Section -->
+          <div class="section-header">
+            <h2>Häufig angefordert</h2>
+            <button class="section-link" onclick="App.showHitlist()">Statistik</button>
+          </div>
+          <div class="hitlist" id="hitlist">
+            <!-- Filled by JS -->
+          </div>
+        </div>
+      </section>
+
+      <!-- Scan Tab -->
+      <section id="tab-scan" class="tab-content">
+        <div id="scanner-area"></div>
+      </section>
+
+      <!-- Search Tab -->
+      <section id="tab-search" class="tab-content">
+        <div class="search-container">
+          <div class="search-input-wrapper">
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"/>
+              <path d="m21 21-4.3-4.3"/>
+            </svg>
+            <input type="text" id="search-input" placeholder="Box-ID, Beschreibung, Abteilung..." autocomplete="off">
+            <button class="search-clear" id="search-clear" style="display:none">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </div>
+          <div class="filter-bar" id="filter-bar">
+            <button class="filter-chip active" data-filter="all">Alle</button>
+            <button class="filter-chip" data-filter="eingelagert">Eingelagert</button>
+            <button class="filter-chip" data-filter="angefordert">Angefordert</button>
+            <button class="filter-chip" data-filter="zur_entsorgung">Entsorgung</button>
+          </div>
+          <div class="search-results" id="search-results">
+            <div class="search-hint">Suchbegriff eingeben oder Filter wählen</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3D Tab -->
+      <section id="tab-view3d" class="tab-content">
+        <div class="view3d-container">
+          <div class="view3d-toolbar">
+            <button class="v3d-btn active" data-view="overview" onclick="View3D.flyToOverview()">Übersicht</button>
+            <button class="v3d-btn" data-view="gang" onclick="View3D.flyToGang()">Gang</button>
+            <button class="v3d-btn reset" onclick="View3D.resetCamera()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                <path d="M3 3v5h5"/>
+              </svg>
+            </button>
+          </div>
+          <div id="3d-viewport">
+            <div id="3d-loading">Lade 3D-Ansicht...</div>
+          </div>
+          <div id="3d-info-panel" class="hidden"></div>
+        </div>
+      </section>
+
+      <!-- List Tab -->
+      <section id="tab-list" class="tab-content">
+        <div class="list-container">
+          <div class="list-header">
+            <div class="list-count" id="list-count">0 Boxen</div>
+            <div class="list-sort">
+              <select id="list-sort">
+                <option value="id">Nach ID</option>
+                <option value="date">Nach Datum</option>
+                <option value="department">Nach Abteilung</option>
+                <option value="status">Nach Status</option>
+              </select>
+            </div>
+          </div>
+          <div class="box-list" id="box-list">
+            <!-- Filled by JS -->
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Tab Bar -->
+    <nav class="tab-bar">
+      <button class="tab-btn active" data-tab="dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="9"/>
+          <rect x="14" y="3" width="7" height="5"/>
+          <rect x="14" y="12" width="7" height="9"/>
+          <rect x="3" y="16" width="7" height="5"/>
+        </svg>
+        <span>Start</span>
+      </button>
+      <button class="tab-btn" data-tab="scan">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 7V5a2 2 0 0 1 2-2h2"/>
+          <path d="M17 3h2a2 2 0 0 1 2 2v2"/>
+          <path d="M21 17v2a2 2 0 0 1-2 2h-2"/>
+          <path d="M7 21H5a2 2 0 0 1-2-2v-2"/>
+          <rect x="7" y="7" width="10" height="10" rx="1"/>
+        </svg>
+        <span>Scan</span>
+      </button>
+      <button class="tab-btn" data-tab="search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/>
+          <path d="m21 21-4.3-4.3"/>
+        </svg>
+        <span>Suche</span>
+      </button>
+      <button class="tab-btn" data-tab="view3d">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/>
+          <path d="m3.3 7 8.7 5 8.7-5"/>
+          <path d="M12 22V12"/>
+        </svg>
+        <span>3D</span>
+      </button>
+      <button class="tab-btn" data-tab="list">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="8" y1="6" x2="21" y2="6"/>
+          <line x1="8" y1="12" x2="21" y2="12"/>
+          <line x1="8" y1="18" x2="21" y2="18"/>
+          <line x1="3" y1="6" x2="3.01" y2="6"/>
+          <line x1="3" y1="12" x2="3.01" y2="12"/>
+          <line x1="3" y1="18" x2="3.01" y2="18"/>
+        </svg>
+        <span>Liste</span>
+      </button>
+    </nav>
+
+    <!-- Modals -->
+    <div id="modal-container" class="modal-container hidden">
+      <div class="modal-backdrop" onclick="App.closeModal()"></div>
+      <div class="modal" id="modal-content"></div>
+    </div>
   </div>
 
-  <!-- Search Tab -->
-  <div id="view-search" class="view">
-    <div id="search-area"></div>
-  </div>
-
-  <!-- 3D View Tab -->
-  <div id="view-view3d" class="view">
-    <div class="view3d-toolbar">
-      <button class="v3d-btn active" onclick="View3D.resetCamera(); this.classList.add('active'); this.nextElementSibling.classList.remove('active')">Übersicht</button>
-      <button class="v3d-btn" onclick="View3D.flyToGang(); this.classList.add('active'); this.previousElementSibling.classList.remove('active')">Gang</button>
-      <span class="v3d-status" id="v3d-status"></span>
-    </div>
-    <div id="3d-viewport">
-      <div id="3d-loading">3D-Ansicht wird geladen...</div>
-      <div id="3d-info-panel"></div>
-    </div>
-    <div class="view3d-legend">
-      <div class="legend-item"><div class="legend-dot" style="background:#00A99D"></div> Finanzen</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#E8913A"></div> Personal</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#5B6ABF"></div> Bauamt</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#C94040"></div> Gemeinderat</div>
-      <div class="legend-item"><div class="legend-dot" style="background:#4A9B4A"></div> Einwohnerd.</div>
-    </div>
-  </div>
-
-  <!-- List Tab -->
-  <div id="view-list" class="view">
-    <div id="list-area"></div>
-  </div>
-
-  <!-- Box Detail (overlay) -->
-  <div id="view-detail" class="view">
-    <div id="detail-content"></div>
-  </div>
-
-  <!-- ======== TAB BAR ======== -->
-  <nav id="tab-bar" class="tab-bar"></nav>
-
-  <!-- ======== SCRIPTS ======== -->
-  <!-- QR decoder -->
-  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
-  <!-- Three.js -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <!-- GSAP -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
-
-  <!-- App modules -->
   <script src="js/data.js"></script>
-  <script src="js/app.js"></script>
+  <script src="js/dashboard.js"></script>
   <script src="js/scanner.js"></script>
   <script src="js/search.js"></script>
   <script src="js/view3d.js"></script>
   <script src="js/list.js"></script>
-
-  <!-- Init -->
-  <script>
-    // Check if libraries loaded
-    window.addEventListener('load', () => {
-      const status = document.getElementById('v3d-status');
-      const loading = document.getElementById('3d-loading');
-      
-      if (typeof THREE === 'undefined') {
-        if (status) status.textContent = '⚠️ Three.js nicht geladen';
-        if (loading) loading.innerHTML = '❌ Three.js konnte nicht geladen werden.<br>Bitte Internetverbindung prüfen.';
-        console.error('Three.js not loaded');
-      }
-      if (typeof gsap === 'undefined') {
-        console.warn('GSAP not loaded - animations disabled');
-      }
-      if (typeof jsQR === 'undefined') {
-        console.warn('jsQR not loaded - using native BarcodeDetector only');
-      }
-      
-      App.init();
-    });
-
-    // Handle resize for 3D view
-    window.addEventListener('resize', () => {
-      if (typeof View3D !== 'undefined' && View3D.initialized) {
-        View3D.onResize();
-      }
-    });
-  </script>
-
+  <script src="js/modals.js"></script>
+  <script src="js/app.js"></script>
 </body>
 </html>
