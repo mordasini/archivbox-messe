@@ -1,116 +1,167 @@
 // ==========================================
-// SEARCH TAB
+// SEARCH - ArchivBox Manager v2
 // ==========================================
 
 const Search = {
+  currentFilter: 'all',
   debounceTimer: null,
 
   init() {
-    const container = document.getElementById('search-area');
-    if (!container) return;
+    const input = document.getElementById('search-input');
+    const clearBtn = document.getElementById('search-clear');
+    
+    if (input) {
+      input.addEventListener('input', () => this.onInput());
+      input.addEventListener('focus', () => this.onFocus());
+    }
+    
+    if (clearBtn) {
+      clearBtn.addEventListener('click', () => this.clearSearch());
+    }
 
-    container.innerHTML = `
-      <div class="search-input-wrap">
-        <span class="search-icon">🔍</span>
-        <input type="text" id="search-input"
-          placeholder="Box-ID, Inhalt oder Abteilung…"
-          autocomplete="off" autocapitalize="none"
-          oninput="Search.onInput(this.value)">
-        <button class="search-clear" id="search-clear" onclick="Search.clear()" style="display:none">✕</button>
-      </div>
-      <div id="search-results" class="search-results">
-        <div class="search-empty">
-          <div class="search-empty-icon">🔍</div>
-          <div>Suchbegriff eingeben</div>
-          <div class="search-empty-hint">z.B. «Jahresabschluss», «Finanzen» oder «DS-756»</div>
-        </div>
-      </div>
-    `;
-
-    // Focus input
-    setTimeout(() => {
-      const input = document.getElementById('search-input');
-      if (input) input.focus();
-    }, 100);
+    // Filter chips
+    document.querySelectorAll('.filter-chip').forEach(chip => {
+      chip.addEventListener('click', () => this.setFilter(chip.dataset.filter));
+    });
   },
 
-  onInput(value) {
-    clearTimeout(this.debounceTimer);
-
+  onInput() {
+    const input = document.getElementById('search-input');
     const clearBtn = document.getElementById('search-clear');
-    if (clearBtn) clearBtn.style.display = value.length > 0 ? 'flex' : 'none';
+    const query = input?.value || '';
+    
+    if (clearBtn) {
+      clearBtn.style.display = query.length > 0 ? 'flex' : 'none';
+    }
 
-    this.debounceTimer = setTimeout(() => {
-      this.doSearch(value);
-    }, 150);
+    clearTimeout(this.debounceTimer);
+    this.debounceTimer = setTimeout(() => this.doSearch(query), 150);
+  },
+
+  onFocus() {
+    const input = document.getElementById('search-input');
+    if (input && !input.value) {
+      this.showRecentOrSuggestions();
+    }
+  },
+
+  clearSearch() {
+    const input = document.getElementById('search-input');
+    const clearBtn = document.getElementById('search-clear');
+    
+    if (input) input.value = '';
+    if (clearBtn) clearBtn.style.display = 'none';
+    
+    this.showRecentOrSuggestions();
+  },
+
+  setFilter(filter) {
+    this.currentFilter = filter;
+    
+    document.querySelectorAll('.filter-chip').forEach(chip => {
+      chip.classList.toggle('active', chip.dataset.filter === filter);
+    });
+
+    const input = document.getElementById('search-input');
+    const query = input?.value || '';
+    
+    if (query || filter !== 'all') {
+      this.doSearch(query);
+    }
   },
 
   doSearch(query) {
-    const results = searchBoxes(query);
-    const container = document.getElementById('search-results');
-    if (!container) return;
+    const results = document.getElementById('search-results');
+    if (!results) return;
 
-    if (!query || query.trim().length === 0) {
-      container.innerHTML = `
-        <div class="search-empty">
-          <div class="search-empty-icon">🔍</div>
-          <div>Suchbegriff eingeben</div>
-          <div class="search-empty-hint">z.B. «Jahresabschluss», «Finanzen» oder «DS-756»</div>
-        </div>
+    let boxes = [];
+    
+    if (query.trim()) {
+      boxes = searchBoxes(query);
+    } else if (this.currentFilter !== 'all') {
+      boxes = findBoxesByStatus(this.currentFilter);
+    }
+
+    // Apply filter
+    if (this.currentFilter !== 'all' && query.trim()) {
+      boxes = boxes.filter(b => b.status === this.currentFilter);
+    }
+
+    if (boxes.length === 0 && !query.trim() && this.currentFilter === 'all') {
+      this.showRecentOrSuggestions();
+      return;
+    }
+
+    if (boxes.length === 0) {
+      results.innerHTML = `
+        <div class="search-hint">Keine Ergebnisse gefunden</div>
       `;
       return;
     }
 
-    if (results.length === 0) {
-      container.innerHTML = `
-        <div class="search-empty">
-          <div class="search-empty-icon">🤷</div>
-          <div>Keine Ergebnisse für «${query}»</div>
-          <div class="search-empty-hint">Versuchen Sie einen anderen Suchbegriff</div>
+    results.innerHTML = boxes.slice(0, 50).map(box => {
+      const dept = DEPARTMENTS[box.department];
+      const status = STATUSES[box.status];
+      
+      return `
+        <div class="search-result-item" onclick="App.showBoxDetail('${box.id}')">
+          <div class="result-dept-bar" style="background: ${dept.color};"></div>
+          <div class="result-content">
+            <div class="result-id">${box.id}</div>
+            <div class="result-label">${box.label}</div>
+            <div class="result-meta">
+              <span class="result-status">
+                <span class="status-dot ${box.status}"></span>
+                ${status.label}
+              </span>
+              <span>${positionString(box.position)}</span>
+            </div>
+          </div>
         </div>
       `;
-      return;
-    }
+    }).join('');
 
-    container.innerHTML = `
-      <div class="search-count">${results.length} ${results.length === 1 ? 'Ergebnis' : 'Ergebnisse'}</div>
-      ${results.map(box => this.renderResult(box, query)).join('')}
-    `;
+    if (boxes.length > 50) {
+      results.innerHTML += `
+        <div class="search-hint">+ ${boxes.length - 50} weitere Ergebnisse</div>
+      `;
+    }
   },
 
-  renderResult(box, query) {
-    const dept = DEPARTMENTS[box.department];
-    const statusColor = STATUS_COLORS[box.status];
+  showRecentOrSuggestions() {
+    const results = document.getElementById('search-results');
+    if (!results) return;
 
-    return `
-      <div class="search-result-card" onclick="App.showBoxDetail('${box.id}')">
-        <div class="search-result-top">
-          <span class="search-result-id">${this.highlight(box.id, query)}</span>
-          <span class="status-dot-sm" style="background:${statusColor}" title="${STATUS_LABELS[box.status]}"></span>
-        </div>
-        <div class="search-result-label">${this.highlight(box.label, query)}</div>
-        <div class="search-result-meta">
-          <span class="dept-badge-sm" style="background:${dept.color}">${box.department}</span>
-          <span class="search-result-pos">${positionString(box.position)}</span>
-        </div>
+    // Show department stats as quick filters
+    const deptStats = {};
+    getBoxes().forEach(box => {
+      deptStats[box.department] = (deptStats[box.department] || 0) + 1;
+    });
+
+    results.innerHTML = `
+      <div class="search-hint">Suchbegriff eingeben oder Abteilung wählen</div>
+      <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 16px;">
+        ${Object.entries(deptStats).map(([dept, count]) => {
+          const deptInfo = DEPARTMENTS[dept];
+          return `
+            <div class="search-result-item" onclick="Search.searchDepartment('${dept}')">
+              <div class="result-dept-bar" style="background: ${deptInfo.color};"></div>
+              <div class="result-content">
+                <div class="result-label">${dept}</div>
+                <div class="result-meta">${count} Boxen</div>
+              </div>
+            </div>
+          `;
+        }).join('')}
       </div>
     `;
   },
 
-  highlight(text, query) {
-    if (!query || query.length < 2) return text;
-    const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-    return text.replace(regex, '<mark>$1</mark>');
-  },
-
-  clear() {
+  searchDepartment(dept) {
     const input = document.getElementById('search-input');
     if (input) {
-      input.value = '';
-      input.focus();
+      input.value = dept;
+      this.doSearch(dept);
     }
-    const clearBtn = document.getElementById('search-clear');
-    if (clearBtn) clearBtn.style.display = 'none';
-    this.doSearch('');
   },
 };

@@ -1,183 +1,111 @@
 // ==========================================
-// APP SHELL - Tab Navigation & Routing
+// APP CONTROLLER - ArchivBox Manager v2
 // ==========================================
 
 const App = {
-  currentTab: 'scan',
-  currentBoxId: null,
-  history: [],
-
-  tabs: {
-    scan:   { icon: '📷', label: 'Scan',    init: () => Scanner.init() },
-    search: { icon: '🔍', label: 'Suche',   init: () => Search.init() },
-    view3d: { icon: '🏗', label: '3D',       init: () => View3D.init() },
-    list:   { icon: '📋', label: 'Liste',   init: () => ListView.init() },
-  },
+  currentTab: 'dashboard',
+  initialized: false,
 
   init() {
-    this.renderTabBar();
-    this.switchTab('scan');
-  },
+    if (this.initialized) return;
+    this.initialized = true;
 
-  renderTabBar() {
-    const bar = document.getElementById('tab-bar');
-    bar.innerHTML = '';
-    for (const [key, tab] of Object.entries(this.tabs)) {
-      const btn = document.createElement('button');
-      btn.className = `tab-btn ${key === this.currentTab ? 'active' : ''}`;
-      btn.dataset.tab = key;
-      btn.innerHTML = `
-        <span class="tab-icon">${tab.icon}</span>
-        <span class="tab-label">${tab.label}</span>
-      `;
-      btn.addEventListener('click', () => this.switchTab(key));
-      bar.appendChild(btn);
-    }
-  },
+    // Initialize data
+    getBoxes();
 
-  switchTab(tabKey) {
-    if (this.currentTab === tabKey && !this.currentBoxId) return;
+    // Initialize modules
+    Dashboard.init();
+    Search.init();
+    List.init();
 
-    this.currentTab = tabKey;
-    this.currentBoxId = null;
-
-    // Update tab bar
+    // Tab switching
     document.querySelectorAll('.tab-btn').forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.tab === tabKey);
+      btn.addEventListener('click', () => this.switchTab(btn.dataset.tab));
     });
 
-    // Hide all views
-    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    // Window resize
+    window.addEventListener('resize', () => this.onResize());
 
-    // Show target view
-    const view = document.getElementById(`view-${tabKey}`);
-    if (view) {
-      view.classList.add('active');
+    console.log('ArchivBox Manager v2 initialized');
+  },
+
+  switchTab(tabId) {
+    if (this.currentTab === tabId) return;
+    
+    // Update tab buttons
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.tab === tabId);
+    });
+
+    // Update tab content
+    document.querySelectorAll('.tab-content').forEach(content => {
+      content.classList.toggle('active', content.id === `tab-${tabId}`);
+    });
+
+    // Stop scanner when leaving scan tab
+    if (this.currentTab === 'scan') {
+      Scanner.stop();
     }
 
-    // Hide detail if showing
-    this.hideDetail();
+    this.currentTab = tabId;
 
-    // Init tab
-    if (this.tabs[tabKey] && this.tabs[tabKey].init) {
-      this.tabs[tabKey].init();
-    }
-
-    // 3D needs resize after becoming visible
-    if (tabKey === 'view3d' && View3D.initialized) {
-      requestAnimationFrame(() => View3D.onResize());
+    // Initialize tab-specific content
+    switch (tabId) {
+      case 'scan':
+        Scanner.init();
+        break;
+      case 'view3d':
+        View3D.init();
+        break;
+      case 'list':
+        List.render();
+        break;
+      case 'dashboard':
+        Dashboard.updateStats();
+        break;
     }
   },
 
+  onResize() {
+    if (this.currentTab === 'view3d') {
+      View3D.onResize();
+    }
+  },
+
+  // Modal shortcuts
   showBoxDetail(boxId) {
-    const box = findBoxById(boxId);
-    if (!box) return;
-
-    this.currentBoxId = boxId;
-    this.history.push(this.currentTab);
-    BoxDetail.render(box);
-
-    document.getElementById('view-detail').classList.add('active');
-    // Don't hide current tab view - detail overlays it
+    Modals.showBoxDetail(boxId);
   },
 
-  hideDetail() {
-    document.getElementById('view-detail').classList.remove('active');
-    this.currentBoxId = null;
+  closeModal() {
+    Modals.close();
   },
 
-  goBack() {
-    this.hideDetail();
+  showDisposalAudit() {
+    Modals.showDisposalAudit();
+  },
+
+  showEmergencyMode() {
+    Modals.showEmergencyMode();
+  },
+
+  showBulkEdit() {
+    Modals.showBulkEdit();
+  },
+
+  showHitlist() {
+    Modals.showHitlist();
+  },
+
+  showRequested() {
+    Modals.showRequested();
+  },
+
+  showAllAlerts() {
+    // Could show a dedicated alerts view
+    console.log('Show all alerts');
   },
 };
 
-// ==========================================
-// BOX DETAIL VIEW
-// ==========================================
-
-const BoxDetail = {
-  render(box) {
-    const el = document.getElementById('detail-content');
-    const dept = DEPARTMENTS[box.department];
-    const statusColor = STATUS_COLORS[box.status];
-    const statusLabel = STATUS_LABELS[box.status];
-
-    el.innerHTML = `
-      <div class="detail-header">
-        <button class="detail-back" onclick="App.goBack()">
-          <span>←</span> Zurück
-        </button>
-        <div class="detail-id">${box.id}</div>
-      </div>
-
-      <div class="detail-body">
-        <div class="detail-status" style="--status-color: ${statusColor}">
-          <span class="status-dot" style="background: ${statusColor}"></span>
-          ${statusLabel}
-        </div>
-
-        <div class="detail-section">
-          <div class="detail-label">Position</div>
-          <div class="detail-value detail-position">
-            <span class="pos-tag">${box.position.rack}</span>
-            <span class="pos-sep">·</span>
-            <span class="pos-tag">Ebene ${box.position.shelf}</span>
-            <span class="pos-sep">·</span>
-            <span class="pos-tag">Platz ${box.position.tray}</span>
-          </div>
-        </div>
-
-        <div class="detail-section">
-          <div class="detail-label">Abteilung</div>
-          <div class="detail-value">
-            <span class="dept-badge" style="background: ${dept.color}">${box.department}</span>
-          </div>
-        </div>
-
-        <div class="detail-section">
-          <div class="detail-label">Bezeichnung</div>
-          <div class="detail-value detail-title">${box.label}</div>
-        </div>
-
-        <div class="detail-section">
-          <div class="detail-label">Inhalt</div>
-          <div class="detail-value">
-            <ul class="detail-contents">
-              ${box.contents.map(c => `<li>${c}</li>`).join('')}
-            </ul>
-          </div>
-        </div>
-
-        <div class="detail-grid">
-          <div class="detail-section">
-            <div class="detail-label">Eingelagert seit</div>
-            <div class="detail-value">${formatDate(box.storedSince)}</div>
-          </div>
-          <div class="detail-section">
-            <div class="detail-label">Aufbewahren bis</div>
-            <div class="detail-value detail-retention ${box.status === 'zur_entsorgung' ? 'expired' : ''}">${formatDate(box.retentionUntil)}</div>
-          </div>
-        </div>
-
-        ${box.photos && box.photos.length > 0 ? `
-          <div class="detail-section">
-            <div class="detail-label">Fotos</div>
-            <div class="detail-photos">
-              ${box.photos.map(p => `<div class="detail-photo"><img src="${p.url}" alt="${p.type}"></div>`).join('')}
-            </div>
-          </div>
-        ` : `
-          <div class="detail-section">
-            <div class="detail-label">Fotos</div>
-            <div class="detail-value detail-no-photos">Keine Fotos vorhanden</div>
-          </div>
-        `}
-
-        <div class="detail-section detail-meta">
-          <div class="detail-label">Box-ID (QR)</div>
-          <div class="detail-qr-display">${box.id}</div>
-        </div>
-      </div>
-    `;
-  }
-};
+// Initialize on DOM ready
+document.addEventListener('DOMContentLoaded', () => App.init());
