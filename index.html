@@ -46,78 +46,78 @@
       <!-- Dashboard Tab -->
       <section id="tab-dashboard" class="tab-content active">
         <div class="dashboard">
-          <!-- Stats Row -->
+          <!-- Quick Actions - Primary -->
+          <div class="quick-actions">
+            <button class="quick-action" onclick="App.switchTab('scan')">
+              <div class="quick-action-icon scan">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M3 7V5a2 2 0 0 1 2-2h2"/>
+                  <path d="M17 3h2a2 2 0 0 1 2 2v2"/>
+                  <path d="M21 17v2a2 2 0 0 1-2 2h-2"/>
+                  <path d="M7 21H5a2 2 0 0 1-2-2v-2"/>
+                  <rect x="7" y="7" width="10" height="10" rx="1"/>
+                </svg>
+              </div>
+              <span class="quick-action-text">Scannen</span>
+            </button>
+            <button class="quick-action" onclick="App.switchTab('search')">
+              <div class="quick-action-icon search">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="11" cy="11" r="8"/>
+                  <path d="m21 21-4.3-4.3"/>
+                </svg>
+              </div>
+              <span class="quick-action-text">Suchen</span>
+            </button>
+            <button class="quick-action" onclick="App.showEmergencyMode()">
+              <div class="quick-action-icon emergency">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                  <line x1="12" y1="9" x2="12" y2="13"/>
+                  <line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+              </div>
+              <span class="quick-action-text">Notfall</span>
+            </button>
+            <button class="quick-action" onclick="App.showBulkEdit()">
+              <div class="quick-action-icon edit">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                  <path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"/>
+                </svg>
+              </div>
+              <span class="quick-action-text">Bearbeiten</span>
+            </button>
+          </div>
+
+          <!-- Stats -->
           <div class="stats-grid">
-            <div class="stat-card primary">
-              <div class="stat-value" id="stat-total">2'847</div>
-              <div class="stat-label">Archivboxen</div>
+            <div class="stat-card">
+              <div class="stat-value primary" id="stat-total">0</div>
+              <div class="stat-label">Boxen</div>
             </div>
             <div class="stat-card">
-              <div class="stat-value" id="stat-requested">12</div>
+              <div class="stat-value warning" id="stat-requested">0</div>
               <div class="stat-label">Angefordert</div>
             </div>
             <div class="stat-card">
-              <div class="stat-value warning" id="stat-disposal">23</div>
-              <div class="stat-label">Zur Entsorgung</div>
+              <div class="stat-value danger" id="stat-disposal">0</div>
+              <div class="stat-label">Entsorgung</div>
             </div>
-            <div class="stat-card">
-              <div class="stat-value" id="stat-departments">5</div>
-              <div class="stat-label">Abteilungen</div>
-            </div>
-          </div>
-
-          <!-- Quick Actions -->
-          <div class="section-header">
-            <h2>Schnellzugriff</h2>
-          </div>
-          <div class="quick-actions">
-            <button class="quick-action" onclick="App.switchTab('scan')">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M3 7V5a2 2 0 0 1 2-2h2"/>
-                <path d="M17 3h2a2 2 0 0 1 2 2v2"/>
-                <path d="M21 17v2a2 2 0 0 1-2 2h-2"/>
-                <path d="M7 21H5a2 2 0 0 1-2-2v-2"/>
-                <rect x="7" y="7" width="10" height="10" rx="1"/>
-              </svg>
-              <span>Scannen</span>
-            </button>
-            <button class="quick-action" onclick="App.switchTab('search')">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="11" cy="11" r="8"/>
-                <path d="m21 21-4.3-4.3"/>
-              </svg>
-              <span>Suchen</span>
-            </button>
-            <button class="quick-action" onclick="App.showEmergencyMode()">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-                <line x1="12" y1="9" x2="12" y2="13"/>
-                <line x1="12" y1="17" x2="12.01" y2="17"/>
-              </svg>
-              <span>Notfall</span>
-            </button>
-            <button class="quick-action" onclick="App.showBulkEdit()">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                <path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"/>
-              </svg>
-              <span>Bearbeiten</span>
-            </button>
           </div>
 
           <!-- Alerts Section -->
           <div class="section-header">
             <h2>Handlungsbedarf</h2>
-            <button class="section-link" onclick="App.showAllAlerts()">Alle anzeigen</button>
           </div>
           <div class="alert-list" id="alert-list">
             <!-- Filled by JS -->
           </div>
 
           <!-- Hitlist Section -->
-          <div class="section-header">
-            <h2>Häufig angefordert</h2>
-            <button class="section-link" onclick="App.showHitlist()">Statistik</button>
+          <div class="section-header" style="margin-top: 24px;">
+            <h2>Top-Zugriffe</h2>
+            <button class="section-link" onclick="App.showHitlist()">Alle</button>
           </div>
           <div class="hitlist" id="hitlist">
             <!-- Filled by JS -->
