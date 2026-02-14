@@ -59,14 +59,12 @@ const Modals = {
 
     const dept = DEPARTMENTS[box.department];
     const status = STATUSES[box.status];
+    const pos = box.position;
 
     this.show(`
-      <div class="modal-header" style="background: ${dept.color}; color: white; border: none;">
-        <div>
-          <div style="font-size: 12px; opacity: 0.85; font-family: monospace;">${box.id}</div>
-          <div class="modal-title" style="color: white;">${box.label}</div>
-        </div>
-        <button class="modal-close" onclick="App.closeModal()" style="color: white;">
+      <div class="modal-header">
+        <div class="modal-title">${box.label}</div>
+        <button class="modal-close" onclick="App.closeModal()">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="18" y1="6" x2="6" y2="18"/>
             <line x1="6" y1="6" x2="18" y2="18"/>
@@ -75,6 +73,15 @@ const Modals = {
       </div>
       
       <div class="modal-body">
+        <!-- RST Hero Display -->
+        <div class="box-detail-rst">
+          <div class="rst-label">Standort</div>
+          <div class="rst-code">
+            <span class="rack">R${pos.rack.replace('R','')}</span><span class="sep"> / </span>S${String(pos.shelf).padStart(2,'0')}<span class="sep"> / </span>T${String(pos.tray).padStart(2,'0')}
+          </div>
+          <div class="rst-box-id">${box.id}</div>
+        </div>
+
         <div style="display: flex; gap: 8px; margin-bottom: 20px;">
           <span class="status-badge ${box.status}">
             <span class="status-dot ${box.status}"></span>
@@ -83,31 +90,26 @@ const Modals = {
           <span class="dept-badge" style="background: ${dept.color};">${box.department}</span>
         </div>
         
-        <div class="form-group">
-          <div class="form-label">Standort</div>
-          <div style="font-size: 15px; font-weight: 500;">${positionString(box.position)}</div>
-        </div>
-        
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-          <div class="form-group">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+          <div class="form-group" style="margin-bottom: 0;">
             <div class="form-label">Eingelagert</div>
-            <div style="font-size: 14px;">${formatDate(box.storedSince)}</div>
+            <div style="font-size: 15px; font-weight: 500;">${formatDate(box.storedSince)}</div>
           </div>
-          <div class="form-group">
+          <div class="form-group" style="margin-bottom: 0;">
             <div class="form-label">Aufbewahren bis</div>
-            <div style="font-size: 14px;">${formatDate(box.retentionUntil)}</div>
+            <div style="font-size: 15px; font-weight: 500;">${formatDate(box.retentionUntil)}</div>
           </div>
         </div>
         
         <div class="form-group">
           <div class="form-label">Zugriffe</div>
-          <div style="font-size: 14px;">${box.accessCount}x ${box.lastAccessed ? '(zuletzt ' + formatDate(box.lastAccessed) + ')' : ''}</div>
+          <div style="font-size: 15px;">${box.accessCount}x ${box.lastAccessed ? '(zuletzt ' + formatDate(box.lastAccessed) + ')' : ''}</div>
         </div>
         
         <div class="form-group">
           <div class="form-label">Inhalt</div>
           <div style="display: flex; flex-direction: column; gap: 4px;">
-            ${box.contents.map(c => `<div style="font-size: 14px; padding: 6px 0; border-bottom: 1px solid var(--gray-200);">${c}</div>`).join('')}
+            ${box.contents.map(c => `<div style="font-size: 14px; padding: 8px 0; border-bottom: 1px solid var(--gray-200);">${c}</div>`).join('')}
           </div>
         </div>
         
@@ -123,11 +125,34 @@ const Modals = {
             </div>
           </div>
         </div>
+
+        <div class="form-group">
+          <div class="form-label">Verlauf</div>
+          <div class="timeline">
+            <div class="timeline-item">
+              <div class="timeline-dot"></div>
+              <div class="timeline-date">${formatDate(box.storedSince)}</div>
+              <div class="timeline-text">Eingelagert</div>
+            </div>
+            ${box.lastAccessed ? `
+            <div class="timeline-item">
+              <div class="timeline-dot"></div>
+              <div class="timeline-date">${formatDate(box.lastAccessed)}</div>
+              <div class="timeline-text">Letzter Zugriff</div>
+            </div>
+            ` : ''}
+          </div>
+        </div>
       </div>
       
       <div class="modal-footer">
-        <button class="btn btn-secondary" onclick="App.closeModal()">Schliessen</button>
-        <button class="btn btn-primary" onclick="Modals.editBox('${box.id}')">
+        <button class="btn btn-secondary" onclick="App.showBoxIn3D('${box.id}')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/>
+          </svg>
+          3D
+        </button>
+        <button class="btn btn-primary" style="flex: 1;" onclick="Modals.editBox('${box.id}')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
             <path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"/>

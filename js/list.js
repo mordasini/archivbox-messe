@@ -47,25 +47,28 @@ const List = {
 
     container.innerHTML = boxes.map(box => {
       const dept = DEPARTMENTS[box.department];
-      const isSelected = this.selectedBoxes.has(box.id);
+      const pos = box.position;
       
       return `
         <div class="box-list-item" onclick="List.onItemClick(event, '${box.id}')">
-          <div class="box-list-checkbox ${isSelected ? 'checked' : ''}" onclick="event.stopPropagation(); List.toggleSelect('${box.id}')">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-              <polyline points="20 6 9 17 4 12"/>
-            </svg>
+          <div class="box-rst-badge">
+            <span class="r">R${pos.rack.replace('R','')}</span>
+            <span class="st">S${String(pos.shelf).padStart(2,'0')} T${String(pos.tray).padStart(2,'0')}</span>
           </div>
-          <div class="box-dept-indicator" style="background: ${dept.color};"></div>
           <div class="box-list-content">
             <div class="box-list-id">${box.id}</div>
             <div class="box-list-label">${box.label}</div>
-            <div class="box-list-meta">${box.department} · ${positionString(box.position)}</div>
+            <div class="box-list-meta">
+              <span class="box-list-dept" style="background: ${dept.color};">${box.department}</span>
+              <span class="status-dot ${box.status}"></span>
+            </div>
           </div>
-          <div class="box-list-arrow">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="9 18 15 12 9 6"/>
-            </svg>
+          <div class="box-list-actions">
+            <button class="box-action-btn" onclick="event.stopPropagation(); App.showBoxIn3D('${box.id}')" title="In 3D zeigen">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/>
+              </svg>
+            </button>
           </div>
         </div>
       `;

@@ -102,21 +102,23 @@ const Search = {
     results.innerHTML = boxes.slice(0, 50).map(box => {
       const dept = DEPARTMENTS[box.department];
       const status = STATUSES[box.status];
+      const pos = box.position;
       
       return `
         <div class="search-result-item" onclick="App.showBoxDetail('${box.id}')">
-          <div class="result-dept-bar" style="background: ${dept.color};"></div>
+          <div class="result-rst">
+            <span class="r">R${pos.rack.replace('R','')}</span>
+            S${String(pos.shelf).padStart(2,'0')}
+          </div>
           <div class="result-content">
             <div class="result-id">${box.id}</div>
             <div class="result-label">${box.label}</div>
             <div class="result-meta">
-              <span class="result-status">
-                <span class="status-dot ${box.status}"></span>
-                ${status.label}
-              </span>
-              <span>${positionString(box.position)}</span>
+              <span class="status-dot ${box.status}"></span>
+              ${box.department}
             </div>
           </div>
+          <div class="result-dept" style="background: ${dept.color};"></div>
         </div>
       `;
     }).join('');

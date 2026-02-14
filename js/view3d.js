@@ -83,13 +83,14 @@ const View3D = {
 
     // Scene
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0xE8EAED);
-    this.scene.fog = new THREE.Fog(0xE8EAED, 15, 35);
+    this.scene.background = new THREE.Color(0x888888);
+    this.scene.fog = new THREE.Fog(0x888888, 12, 30);
 
-    // Camera - Übersicht von FRONT (+X), erhöht, im Gang (Z=0)
+    // Camera - Mobile optimiert: tiefer, näher, zentriert auf mittlere Regale
     this.camera = new THREE.PerspectiveCamera(50, W / H, 0.1, 100);
-    this.lookTarget = new THREE.Vector3(0, 1, 0);
-    this.camera.position.set(6, 3, 0);
+    this.lookTarget = new THREE.Vector3(0, 0.6, 0);
+    // Tiefer positioniert (y=1.8 statt 3), näher dran (x=4 statt 6)
+    this.camera.position.set(4, 1.8, 0);
     this.camera.lookAt(this.lookTarget);
 
     // Renderer
@@ -262,16 +263,32 @@ const View3D = {
         const boxX = trayStartX + slotIdx * boxSpacing + boxSpacing/2;
         const boxY = shelfY + 0.02 + this.BOX_H/2 + 0.01;
         
-        // Box-Körper - einheitlich hellgrau wie DocuSave Boxen
+        // Heatmap color based on access count
+        let boxColor = 0xE8E6E3; // Default light gray
+        if (!isGhost && box.accessCount !== undefined) {
+          if (box.accessCount > 40) {
+            boxColor = 0xEF4444; // Hot - red
+          } else if (box.accessCount > 20) {
+            boxColor = 0xF59E0B; // Medium - orange
+          } else if (box.accessCount > 5) {
+            boxColor = 0x3B82F6; // Low - blue
+          }
+        }
+        
         const boxGeo = new THREE.BoxGeometry(this.BOX_W, this.BOX_H, this.BOX_D);
         const boxMat = new THREE.MeshStandardMaterial({
-          color: isGhost ? 0xCCCCCC : 0xE8E6E3,  // Hellgrau
+          color: isGhost ? 0xCCCCCC : boxColor,
           transparent: isGhost, opacity,
-          roughness: 0.9,
+          roughness: 0.8,
         });
         const boxMesh = new THREE.Mesh(boxGeo, boxMat);
         boxMesh.position.set(boxX, boxY, 0);
+        boxMesh.userData = { boxId: box.id, box: box };
         group.add(boxMesh);
+        
+        if (!isGhost) {
+          this.clickableObjects.push(boxMesh);
+        }
 
         // QR-Code Andeutung unten auf der Frontseite (nur Messe-Racks)
         if (!isGhost) {
@@ -313,8 +330,17 @@ const View3D = {
       canvas.width = 512;
       canvas.height = 128;
       const ctx = canvas.getContext('2d');
+      
+      // Dark background for contrast
+      if (!isGhost) {
+        ctx.fillStyle = 'rgba(10,10,10,0.85)';
+        ctx.beginPath();
+        ctx.roundRect(20, 20, 472, 88, 16);
+        ctx.fill();
+      }
+      
       ctx.font = `bold ${size}px sans-serif`;
-      ctx.fillStyle = isGhost ? 'rgba(120,120,120,0.5)' : '#374151';
+      ctx.fillStyle = isGhost ? 'rgba(100,100,100,0.5)' : '#FFFFFF';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(text, 256, 64);
@@ -331,23 +357,30 @@ const View3D = {
       return sprite;
     };
 
-    // Two-line label (e.g., "Rack" + "02")
+    // Two-line label (e.g., "Rack" + "02") with background
     const makeTwoLineLabel = (line1, line2, x, y, z, scale = 0.4) => {
       const canvas = document.createElement('canvas');
       canvas.width = 256;
       canvas.height = 256;
       const ctx = canvas.getContext('2d');
       
+      // Dark background
+      ctx.fillStyle = 'rgba(10,10,10,0.9)';
+      ctx.beginPath();
+      ctx.roundRect(20, 40, 216, 180, 16);
+      ctx.fill();
+      
       // Line 1 (smaller, e.g., "Rack")
-      ctx.font = 'bold 48px sans-serif';
-      ctx.fillStyle = '#374151';
+      ctx.font = 'bold 44px sans-serif';
+      ctx.fillStyle = '#00A99D';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(line1, 128, 80);
+      ctx.fillText(line1, 128, 90);
       
       // Line 2 (larger, e.g., "02")
-      ctx.font = 'bold 96px sans-serif';
-      ctx.fillText(line2, 128, 170);
+      ctx.font = 'bold 80px sans-serif';
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillText(line2, 128, 165);
       
       const texture = new THREE.CanvasTexture(canvas);
       texture.minFilter = THREE.LinearFilter;
@@ -472,10 +505,10 @@ const View3D = {
   },
 
   resetCamera() {
-    // Übersicht: von FRONT (+X), erhöht, im Gang (Z=0)
+    // Übersicht: tiefer, näher für Mobile
     this.animateCamera(
-      { x: 6, y: 3, z: 0 },
-      { x: 0, y: 1, z: 0 }
+      { x: 4, y: 1.8, z: 0 },
+      { x: 0, y: 0.6, z: 0 }
     );
     this.clearHighlight();
     this.hideInfoPanel();
@@ -485,12 +518,72 @@ const View3D = {
   flyToGang() {
     // Im Gang stehend, Augenhöhe, schaut entlang -X
     this.animateCamera(
-      { x: 3, y: 1.5, z: 0 },
-      { x: 0, y: 1, z: 0 }
+      { x: 2.5, y: 1.2, z: 0 },
+      { x: 0, y: 0.8, z: 0 }
     );
     this.clearHighlight();
     this.hideInfoPanel();
     this.showAllRacks();
+  },
+
+  flyToOverview() {
+    this.resetCamera();
+    // Update button states
+    document.querySelectorAll('.v3d-btn[data-view]').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.view === 'overview');
+    });
+  },
+
+  flyToBox(box) {
+    if (!box || !box.position) return;
+    
+    const pos = box.position;
+    const rackId = pos.rack;
+    const shelf = pos.shelf;
+    const cfg = DEPOT_CONFIG.racks[rackId];
+    
+    if (!cfg) return;
+    
+    // Calculate position
+    const rackZ = this.rackZ[rackId];
+    const openDir = this.rackOpenDir[rackId];
+    const shelfY = (shelf - 0.5) * (cfg.height / cfg.shelves);
+    const cameraZ = rackZ + openDir * 3;
+    
+    // Hide other racks, show target rack
+    this.hideOtherRacks(rackId, shelf);
+    
+    // Animate to box position
+    this.animateCamera(
+      { x: 0.5, y: shelfY + 0.4, z: cameraZ },
+      { x: 0, y: shelfY, z: rackZ },
+      0.8
+    );
+    
+    // Highlight the shelf
+    this.highlightTablar(rackId, shelf);
+    
+    // Show info panel
+    this.showBoxInfo(box);
+  },
+
+  showBoxInfo(box) {
+    const panel = document.getElementById('3d-info-panel');
+    if (!panel) return;
+    
+    const pos = box.position;
+    const heatClass = box.accessCount > 40 ? 'heat-high' : (box.accessCount > 20 ? 'heat-medium' : 'heat-low');
+    
+    panel.innerHTML = `
+      <div class="info-panel-rst">
+        <span class="r">R${pos.rack.replace('R','')}</span> / S${String(pos.shelf).padStart(2,'0')} / T${String(pos.tray).padStart(2,'0')}
+      </div>
+      <div class="info-panel-detail">${box.label}</div>
+      <div class="info-panel-boxes">
+        <span class="info-panel-box ${heatClass}" onclick="App.showBoxDetail('${box.id}')">${box.id} (${box.accessCount}x)</span>
+      </div>
+    `;
+    panel.classList.remove('hidden');
   },
 
   // ==========================================

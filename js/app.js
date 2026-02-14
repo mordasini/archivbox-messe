@@ -102,8 +102,22 @@ const App = {
   },
 
   showAllAlerts() {
-    // Could show a dedicated alerts view
     console.log('Show all alerts');
+  },
+
+  showBoxIn3D(boxId) {
+    const box = findBoxById(boxId);
+    if (!box) return;
+    
+    this.closeModal();
+    this.switchTab('view3d');
+    
+    // Wait for 3D to init, then fly to box
+    setTimeout(() => {
+      if (View3D && View3D.flyToBox) {
+        View3D.flyToBox(box);
+      }
+    }, 300);
   },
 };
 

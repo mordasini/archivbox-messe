@@ -203,6 +203,7 @@ const Scanner = {
     if (!result) return;
     
     const dept = DEPARTMENTS[box.department];
+    const pos = box.position;
     const frame = document.getElementById('scanner-frame');
     if (frame) {
       frame.classList.add('success');
@@ -214,18 +215,32 @@ const Scanner = {
     }
 
     result.innerHTML = `
-      <div class="scanner-found" onclick="App.showBoxDetail('${box.id}')">
-        <div class="scanner-found-check">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="20 6 9 17 4 12"/>
-          </svg>
+      <div class="scanner-found">
+        <div class="scanner-found-rst">
+          <div class="rst-label">Standort</div>
+          <div class="rst-code">
+            <span class="rack">R${pos.rack.replace('R','')}</span><span class="sep"> / </span>S${String(pos.shelf).padStart(2,'0')}<span class="sep"> / </span>T${String(pos.tray).padStart(2,'0')}
+          </div>
+          <div class="rst-box-id">${box.id}</div>
         </div>
-        <div class="scanner-found-info">
-          <h4>${box.id}</h4>
-          <p>${box.label}</p>
+        <div class="scanner-found-label">${box.label}</div>
+        <div class="scanner-actions">
+          <button class="scanner-btn secondary" onclick="Scanner.init()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+              <path d="M3 3v5h5"/>
+            </svg>
+            Weiter
+          </button>
+          <button class="scanner-btn primary" onclick="App.showBoxDetail('${box.id}')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"/>
+              <path d="m21 21-4.3-4.3"/>
+            </svg>
+            Details
+          </button>
         </div>
       </div>
-      ${!this.emergencyMode ? '<button class="scanner-rescan-btn" onclick="Scanner.init()">Neuer Scan</button>' : ''}
     `;
   },
 

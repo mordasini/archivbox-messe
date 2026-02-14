@@ -118,19 +118,25 @@ const Dashboard = {
     const topBoxes = getTopAccessedBoxes(5);
 
     if (topBoxes.length === 0 || topBoxes[0].accessCount === 0) {
-      container.innerHTML = '<div class="text-center text-muted" style="padding: 20px;">Keine Zugriffsdaten</div>';
+      container.innerHTML = '<div style="text-align: center; padding: 20px; color: var(--gray-400);">Keine Zugriffsdaten</div>';
       return;
     }
 
-    container.innerHTML = topBoxes.map((box, i) => `
+    container.innerHTML = topBoxes.map((box, i) => {
+      const pos = box.position;
+      return `
       <div class="hitlist-item" onclick="App.showBoxDetail('${box.id}')">
-        <div class="hitlist-rank ${i === 0 ? 'top' : ''}">${i + 1}</div>
+        <div class="result-rst">
+          <span class="r">R${pos.rack.replace('R','')}</span>
+          S${String(pos.shelf).padStart(2,'0')} T${String(pos.tray).padStart(2,'0')}
+        </div>
         <div class="hitlist-content">
           <div class="hitlist-id">${box.id}</div>
           <div class="hitlist-label">${box.label}</div>
         </div>
         <div class="hitlist-count">${box.accessCount}x</div>
       </div>
-    `).join('');
+    `;
+    }).join('');
   },
 };
